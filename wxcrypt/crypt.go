@@ -42,6 +42,10 @@ type CryptError struct {
 	ErrMsg  string
 }
 
+func (c *CryptError) Error() string {
+	return fmt.Sprintf("code:%d,msg:%s", c.ErrCode, c.ErrMsg)
+}
+
 func NewCryptError(err_code int, err_msg string) *CryptError {
 	return &CryptError{ErrCode: err_code, ErrMsg: err_msg}
 }

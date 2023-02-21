@@ -9,8 +9,10 @@ import (
 
 func main() {
 	engine := gin.Default()
-	engine.GET("", handlers.Verify)
-	engine.GET("/hello", handlers.Hello)
+	bot := &handlers.Bot{}
+	engine.GET("", bot.VerifyHandler)
+	engine.POST("", bot.MessageHandler)
+	engine.GET("/hello", bot.HelloHandler)
 
 	err := http.ListenAndServe("0.0.0.0:8099", engine)
 	if err != nil {

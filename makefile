@@ -10,5 +10,5 @@ build: ## golang build
 
 
 docker-build: ## build docker image
-	docker build . -f Dockerfile -t kiser/weixin-bot:v0.0.2
-	docker push kiser/weixin-bot:v0.0.2
+	docker build . -f Dockerfile -t kiser/weixin-bot:v0.0.3
+	docker push kiser/weixin-bot:v0.0.3
