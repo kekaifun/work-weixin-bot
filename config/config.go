@@ -1,5 +1,5 @@
 package config
 
-const Token = "EUnMeSDLPLCDm2kBtnDlMsbWN"
+const Token = "you-guess"
 
-const EncodingAESKey = "8NO51Dc1GgFvYcgiBDenyFuTKqCOJ89vpUvEzT4frd5"
+const EncodingAESKey = "you-guess"

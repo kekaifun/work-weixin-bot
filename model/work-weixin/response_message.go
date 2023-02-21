@@ -1,4 +1,4 @@
-package model
+package work_weixin
 
 import (
 	"encoding/xml"

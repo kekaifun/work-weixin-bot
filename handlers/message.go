@@ -1,21 +1,18 @@
 package handlers
 
 import (
-	"bytes"
-	"crypto/sha1"
 	"encoding/xml"
 	"fmt"
+	"github.com/gin-gonic/gin/render"
+	"github.com/kekaifun/work-weixin-bot/model/work-weixin"
 	"github.com/sbzhu/weworkapi_golang/wxbizmsgcrypt"
 	"io"
 	"log"
 	"net/http"
-	"sort"
-
-	"github.com/gin-gonic/gin/render"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kekaifun/work-weixin-bot/config"
-	"github.com/kekaifun/work-weixin-bot/model"
 )
 
 // MessageHandler handler message request
@@ -46,7 +43,7 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 	}
 
 	log.Printf("messageHandler: decryptMessage: %s\n", string(msg))
-	var msgContent model.MsgContent
+	var msgContent work_weixin.MsgContent
 	err = xml.Unmarshal(msg, &msgContent)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -55,15 +52,13 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("got message: %v\n", msgContent)
+	if msgContent.ChatType == "group" && msgContent.MsgType == "text" {
+		msgContent.Text.Content = strings.TrimPrefix(msgContent.Text.Content, "@"+b.Name+" ")
+	}
 
-	reply := model.ReplyMsgContent{
-		Text: model.ResponseText{
+	reply := work_weixin.ReplyMsgContent{
+		Text: work_weixin.ResponseText{
 			Content: wxbizmsgcrypt.CDATA{Value: msgContent.Text.Content},
-			MentionedList: model.MentionedList{
-				Item: []wxbizmsgcrypt.CDATA{{
-					Value: msgContent.From.UserId,
-				}},
-			},
 		},
 		MsgType: msgContent.MsgType,
 	}
@@ -83,18 +78,4 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 	c.Render(200, render.Data{
 		Data: encryptMsg,
 	})
-}
-
-func calSignature(timestamp, nonce, data string) string {
-	sort_arr := []string{config.Token, timestamp, nonce, data}
-	sort.Strings(sort_arr)
-	var buffer bytes.Buffer
-	for _, value := range sort_arr {
-		buffer.WriteString(value)
-	}
-
-	sha := sha1.New()
-	sha.Write(buffer.Bytes())
-	signature := fmt.Sprintf("%x", sha.Sum(nil))
-	return string(signature)
 }

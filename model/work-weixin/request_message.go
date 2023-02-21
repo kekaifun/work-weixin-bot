@@ -1,4 +1,4 @@
-package model
+package work_weixin
 
 type MsgContent struct {
 	WebhookUrl     string `json:"WebhookUrl" xml:"WebhookUrl"`

@@ -9,6 +9,7 @@ import (
 )
 
 type Bot struct {
+	Name string
 }
 
 func (b *Bot) VerifySignature(c *gin.Context) ([]byte, error) {
