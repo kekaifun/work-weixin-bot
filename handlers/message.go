@@ -1,16 +1,21 @@
 package handlers
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"encoding/xml"
-	"github.com/gin-gonic/gin/render"
+	"fmt"
+	"github.com/sbzhu/weworkapi_golang/wxbizmsgcrypt"
 	"io"
 	"log"
 	"net/http"
+	"sort"
+
+	"github.com/gin-gonic/gin/render"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kekaifun/work-weixin-bot/config"
 	"github.com/kekaifun/work-weixin-bot/model"
-	"github.com/kekaifun/work-weixin-bot/wxcrypt"
 )
 
 // MessageHandler handler message request
@@ -27,10 +32,12 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("messageHandler: %s\n", string(body))
-	wxcpt := wxcrypt.NewWXBizMsgCrypt(config.Token, config.EncodingAESKey, "", wxcrypt.XmlType)
+	wxcpt := wxbizmsgcrypt.NewWXBizMsgCrypt(config.Token, config.EncodingAESKey, "", wxbizmsgcrypt.XmlType)
+
 	var msg []byte
-	msg, err = wxcpt.DecryptMsg(verifyMsgSign, verifyTimestamp, verifyNonce, body)
-	if err != nil {
+	var cryptErr *wxbizmsgcrypt.CryptError
+	msg, cryptErr = wxcpt.DecryptMsg(verifyMsgSign, verifyTimestamp, verifyNonce, body)
+	if cryptErr != nil {
 		log.Printf("decrypt msg failed, err:%v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"Error": err,
@@ -50,14 +57,19 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 	log.Printf("got message: %v\n", msgContent)
 
 	reply := model.ReplyMsgContent{
-		XMLName: xml.Name{Local: "xml"},
-		Text: model.Text{
-			Content:       msgContent.Text.Content,
-			MentionedList: []model.Item{{Value: msgContent.From.UserId}},
+		Text: model.ResponseText{
+			Content: wxbizmsgcrypt.CDATA{Value: msgContent.Text.Content},
+			MentionedList: model.MentionedList{
+				Item: []wxbizmsgcrypt.CDATA{{
+					Value: msgContent.From.UserId,
+				}},
+			},
 		},
 		MsgType: msgContent.MsgType,
 	}
 	replyXml, _ := xml.Marshal(&reply)
+
+	fmt.Println("replyXml: " + string(replyXml))
 
 	encryptMsg, cryptErr := wxcpt.EncryptMsg(string(replyXml), verifyTimestamp, verifyNonce)
 	if cryptErr != nil {
@@ -67,16 +79,22 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 		})
 		return
 	}
-	signature := wxcpt.CalSignature(verifyTimestamp, verifyNonce, string(encryptMsg))
 
-	responseXml := model.MessageResponse{
-		Encrypt:      string(encryptMsg),
-		MsgSignature: signature,
-		TimeStamp:    verifyTimestamp,
-		Nonce:        verifyNonce,
-	}
-	respBytes, _ := xml.Marshal(responseXml)
 	c.Render(200, render.Data{
-		Data: respBytes,
+		Data: encryptMsg,
 	})
+}
+
+func calSignature(timestamp, nonce, data string) string {
+	sort_arr := []string{config.Token, timestamp, nonce, data}
+	sort.Strings(sort_arr)
+	var buffer bytes.Buffer
+	for _, value := range sort_arr {
+		buffer.WriteString(value)
+	}
+
+	sha := sha1.New()
+	sha.Write(buffer.Bytes())
+	signature := fmt.Sprintf("%x", sha.Sum(nil))
+	return string(signature)
 }

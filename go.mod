@@ -2,7 +2,10 @@ module github.com/kekaifun/work-weixin-bot
 
 go 1.19
 
-require github.com/gin-gonic/gin v1.8.2
+require (
+	github.com/gin-gonic/gin v1.8.2
+	github.com/sbzhu/weworkapi_golang v0.0.0-20210525081115-1799804a7c8d
+)
 
 require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
