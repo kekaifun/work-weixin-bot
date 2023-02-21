@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -119,7 +118,7 @@ func CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("finished CallbackHandler", httpstr)
 }
 
-func main() {
-	http.HandleFunc("/", CallbackHandler) //      设置访问路由
-	log.Fatal(http.ListenAndServe(":8893", nil))
-}
+//func main() {
+//	http.HandleFunc("/", CallbackHandler) //      设置访问路由
+//	log.Fatal(http.ListenAndServe(":8893", nil))
+//}

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func main() {
+func kk() {
 	token := "QDG6eK"
 	receiverId := "wx5823bf96d3bd56c7"
 	encodingAeskey := "jWmYm7qr5nMoAUwZRjGtBxmz3KA1tkAj3ykkR6q2B2C"
