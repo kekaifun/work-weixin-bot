@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"math/rand"
 	"sort"
@@ -35,6 +36,7 @@ type ProtocolType int
 
 const (
 	JsonType ProtocolType = 1
+	XmlType  ProtocolType = 2
 )
 
 type CryptError struct {
@@ -101,10 +103,32 @@ func (self *JsonProcessor) serialize(msg4_send *WXBizJsonMsg4Send) ([]byte, *Cry
 	return json_msg, nil
 }
 
+type XmlProcessor struct {
+}
+
+func (x *XmlProcessor) parse(src []byte) (*WXBizJsonMsg4Recv, *CryptError) {
+	var msg4_recv WXBizJsonMsg4Recv
+	err := xml.Unmarshal(src, &msg4_recv)
+	if err != nil {
+		fmt.Println("Unmarshal fail", err)
+		return nil, NewCryptError(ParseJsonError, "xml to msg fail")
+	}
+	return &msg4_recv, nil
+}
+
+func (x *XmlProcessor) serialize(msg4_send *WXBizJsonMsg4Send) ([]byte, *CryptError) {
+	xmlMsg, err := xml.Marshal(msg4_send)
+	if nil != err {
+		return nil, NewCryptError(GenJsonError, err.Error())
+	}
+
+	return xmlMsg, nil
+}
+
 func NewWXBizMsgCrypt(token, encoding_aeskey, receiver_id string, protocol_type ProtocolType) *WXBizMsgCrypt {
 	var protocol_processor ProtocolProcessor
-	if protocol_type != JsonType {
-		panic("unsupport protocal")
+	if protocol_type == XmlType {
+		protocol_processor = new(XmlProcessor)
 	} else {
 		protocol_processor = new(JsonProcessor)
 	}
@@ -199,7 +223,7 @@ func (self *WXBizMsgCrypt) cbcDecrypter(base64_encrypt_msg string) ([]byte, *Cry
 	return encrypt_msg, nil
 }
 
-func (self *WXBizMsgCrypt) calSignature(timestamp, nonce, data string) string {
+func (self *WXBizMsgCrypt) CalSignature(timestamp, nonce, data string) string {
 	sort_arr := []string{self.token, timestamp, nonce, data}
 	sort.Strings(sort_arr)
 	var buffer bytes.Buffer
@@ -237,7 +261,7 @@ func (self *WXBizMsgCrypt) ParsePlainText(plaintext []byte) ([]byte, uint32, []b
 }
 
 func (self *WXBizMsgCrypt) VerifyURL(msg_signature, timestamp, nonce, echostr string) ([]byte, *CryptError) {
-	signature := self.calSignature(timestamp, nonce, echostr)
+	signature := self.CalSignature(timestamp, nonce, echostr)
 
 	if strings.Compare(signature, msg_signature) != 0 {
 		return nil, NewCryptError(ValidateSignatureError, "signature not equal")
@@ -278,37 +302,42 @@ func (self *WXBizMsgCrypt) EncryptMsg(reply_msg, timestamp, nonce string) ([]byt
 	}
 	ciphertext := string(tmp_ciphertext)
 
-	signature := self.calSignature(timestamp, nonce, ciphertext)
+	signature := self.CalSignature(timestamp, nonce, ciphertext)
 
 	msg4_send := NewWXBizJsonMsg4Send(ciphertext, signature, timestamp, nonce)
 	return self.protocol_processor.serialize(msg4_send)
 }
 
-func (self *WXBizMsgCrypt) DecryptMsg(msg_signature, timestamp, nonce string, post_data []byte) ([]byte, *CryptError) {
+func (self *WXBizMsgCrypt) DecryptMsg(msg_signature, timestamp, nonce string, post_data []byte) ([]byte, error) {
 	msg4_recv, crypt_err := self.protocol_processor.parse(post_data)
 	if nil != crypt_err {
+		fmt.Println("parse failed: " + crypt_err.Error())
 		return nil, crypt_err
 	}
 
-	signature := self.calSignature(timestamp, nonce, msg4_recv.Encrypt)
+	signature := self.CalSignature(timestamp, nonce, msg4_recv.Encrypt)
 
 	if strings.Compare(signature, msg_signature) != 0 {
+		fmt.Printf("compare failed, signature: %s, msg_signature: %s\n", signature, msg_signature)
 		return nil, NewCryptError(ValidateSignatureError, "signature not equal")
 	}
 
 	plaintext, crypt_err := self.cbcDecrypter(msg4_recv.Encrypt)
 	if nil != crypt_err {
+		fmt.Println("cbc decrypter failed: " + crypt_err.Error())
 		return nil, crypt_err
 	}
 
 	_, _, msg, receiver_id, crypt_err := self.ParsePlainText(plaintext)
 	if nil != crypt_err {
+		fmt.Printf("parse plain text failed, plaintext:%s,err:%s \n", plaintext, crypt_err.Error())
 		return nil, crypt_err
 	}
 
 	if len(self.receiver_id) > 0 && strings.Compare(string(receiver_id), self.receiver_id) != 0 {
+		fmt.Printf("receiver_id not equal, origin:%s, get:%s\n", self.receiver_id, receiverId)
 		return nil, NewCryptError(ValidateCorpidError, "receiver_id is not equil")
 	}
-
+	fmt.Printf("decrypt success, msg: %s\n", string(msg))
 	return msg, nil
 }

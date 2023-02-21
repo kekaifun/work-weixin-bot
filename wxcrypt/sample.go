@@ -73,16 +73,16 @@ func kk() {
 
 	reqData := []byte(`{"tousername":"wx5823bf96d3bd56c7","encrypt":"CZWs4CWRpI4VolQlvn4dlEC1alN2MUEY2VklGehgBVLBrlVF7SyT+SV+Toj43l4ayJ9UMGKphktKKmP7B2j/P1ey67XB8PBgS7Wr5/8+w/yWriZv3Vmoo/MH3/1HsIWZrPQ3N2mJrelStIfI2Y8kLKXA7EhfZgZX4o+ffdkZDM76SEl79Ib9mw7TGjZ9Aw/x/A2VjNbV1E8BtEbRxYYcQippYNw7hr8sFfa3nW1xLdxokt8QkRX83vK3DFP2F6TQFPL2Tu98UwhcUpPvdJBuu1/yiOQIScppV3eOuLWEsko=","agentid":"218"}`)
 
-	msg, cryptErr := wxcpt.DecryptMsg(reqMsgSign, reqTimestamp, reqNonce, reqData)
-	if nil != cryptErr {
-		fmt.Println("DecryptMsg fail", cryptErr)
+	msg, err := wxcpt.DecryptMsg(reqMsgSign, reqTimestamp, reqNonce, reqData)
+	if nil != err {
+		fmt.Println("DecryptMsg fail", err)
 	}
 	fmt.Println("after decrypt msg: ", string(msg))
 	// TODO: 解析出明文json标签的内容进行处理
 	// For example:
 
 	var msgContent MsgContent
-	err := json.Unmarshal(msg, &msgContent)
+	err = json.Unmarshal(msg, &msgContent)
 	if nil != err {
 		fmt.Println("Unmarshal fail", err)
 	} else {
