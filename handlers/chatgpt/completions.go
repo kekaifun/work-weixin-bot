@@ -44,15 +44,17 @@ func (o *OpenAIHandler) Completions(c *gin.Context) {
 }
 
 func (o *OpenAIHandler) recordResponse(request *http.Request, response *http.Response) error {
+	if request.Method != http.MethodPost {
+		return nil
+	}
+
 	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println("completions: read response body failed")
 		return err
 	}
 	response.Body = io.NopCloser(bytes.NewReader(responseBody))
-	if request.Method != http.MethodPost {
-		return nil
-	}
+
 	var chatResp = &openai.ChatResponse{}
 	err = json.Unmarshal(responseBody, chatResp)
 	if err != nil {
@@ -70,6 +72,10 @@ func (o *OpenAIHandler) recordResponse(request *http.Request, response *http.Res
 }
 
 func (o *OpenAIHandler) recordRequest(request *http.Request) error {
+	if request.Method != http.MethodPost {
+		return nil
+	}
+
 	requestBody, err := io.ReadAll(request.Body)
 	if err != nil {
 		fmt.Println("completions: read request body failed")
@@ -77,9 +83,6 @@ func (o *OpenAIHandler) recordRequest(request *http.Request) error {
 	}
 	// fmt.Println("requestBody: " + string(requestBody))
 	request.Body = io.NopCloser(bytes.NewReader(requestBody))
-	if request.Method != http.MethodPost {
-		return nil
-	}
 
 	var chatReq = &openai.ChatRequest{}
 	err = json.Unmarshal(requestBody, chatReq)
