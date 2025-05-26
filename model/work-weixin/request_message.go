@@ -2,14 +2,14 @@ package work_weixin
 
 type MsgContent struct {
 	WebhookUrl     string `json:"WebhookUrl" xml:"WebhookUrl"`
-	From           From   `json:"From"`
+	From           From   `json:"From" xml:"From"`
 	MsgType        string `json:"MsgType" xml:"MsgType"`
 	MsgId          string `json:"MsgId" xml:"MsgId"`
 	ChatId         string `json:"ChatId" xml:"ChatId"`
 	PostId         string `json:"PostId" xml:"PostId"`
 	ChatType       string `json:"ChatType" xml:"ChatType"`
 	GetChatInfoUrl string `json:"GetChatInfoUrl" xml:"GetChatInfoUrl"`
-	Text           Text   `json:"Text"`
+	Text           Text   `json:"Text" xml:"Text"`
 }
 
 type From struct {

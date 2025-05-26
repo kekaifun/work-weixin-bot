@@ -14,8 +14,8 @@ RUN \
 
 FROM golang:1.23
 
-EXPOSE 8099
+EXPOSE 80
 WORKDIR /workspace
 COPY --from=builder /workspace/bin/weixin-bot /workspace/weixin-bot
 
-ENTRYPOINT ["/workspace/weixin-bot"]
+ENTRYPOINT ["/workspace/weixin-bot", "--config", "/workspace/config.yaml"]

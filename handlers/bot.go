@@ -11,11 +11,11 @@ import (
 
 type Bot struct {
 	Name            string
-	WechatBotSecret config.WechatBotSecret
+	WechatBotConfig config.WechatBotConfig
 }
 
 func (b *Bot) VerifySignature(c *gin.Context) ([]byte, error) {
-	secret := b.WechatBotSecret
+	secret := b.WechatBotConfig.Secret
 	verifyTimestamp := c.Query("timestamp")
 	verifyNonce := c.Query("nonce")
 	verifyEchoStr := c.Query("echostr")
