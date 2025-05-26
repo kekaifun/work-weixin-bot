@@ -1,14 +1,19 @@
-help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+# Docker 相关变量
+DOCKER_IMAGE_NAME = ccr.ccs.tencentyun.com/cloudmonitor/wework-weixin-bot
+VERSION ?= latest
 
-GOOS ?= $(shell go env GOOS)
-GOARCH ?= $(shell go env GOARCH)
-LDFLAGS ?=
-
-build: ## golang build
-	env GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o 'bin/weixin-bot' ./main.go
+# 构建 Docker 镜像
+.PHONY: docker-build
+build-image:
+	docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) -f Dockerfile .
 
 
-docker-build: ## build docker image
-	docker build . -f Dockerfile -t kiser/weixin-bot:v0.1.2
-	docker push kiser/weixin-bot:v0.1.2
+build-linux-image:
+	DOCKER_BUILDKIT=1 DOCKER_DEFAULT_PLATFORM=linux/amd64 docker build -t $(DOCKER_IMAGE_NAME):$(VERSION) -f Dockerfile .
+
+push-image:
+	docker push $(DOCKER_IMAGE_NAME):$(VERSION)
+
+
+
+
