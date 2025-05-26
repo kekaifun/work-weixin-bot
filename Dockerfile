@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.18 as builder
+FROM golang:1.23 as builder
 WORKDIR /workspace
 # pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
 COPY ./go.mod ./go.sum ./
@@ -12,7 +12,7 @@ RUN \
   export GOPROXY="https://goproxy.woa.com,direct" &&\
   make build
 
-FROM golang:1.18
+FROM golang:1.23
 
 EXPOSE 8099
 WORKDIR /workspace

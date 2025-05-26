@@ -1,0 +1,12 @@
+addr: 0.0.0.0:8099
+wechat_bot:
+  secret:
+    token: you-guess
+    encoding_aes_key: you-guess
+  serve_path: /wechat-bot
+  backend_server:
+    url: http://localhost:8099/wechat-bot
+  async_response: true
+openai:
+  base_url: https://api.openai.com
+  serve_path: /v1/chat/completions

@@ -3,16 +3,16 @@ package handlers
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/gin-gonic/gin/render"
-	"github.com/kekaifun/work-weixin-bot/model/work-weixin"
-	"github.com/sbzhu/weworkapi_golang/wxbizmsgcrypt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin/render"
+	work_weixin "github.com/kekaifun/work-weixin-bot/model/work-weixin"
+	"github.com/sbzhu/weworkapi_golang/wxbizmsgcrypt"
+
 	"github.com/gin-gonic/gin"
-	"github.com/kekaifun/work-weixin-bot/config"
 )
 
 // MessageHandler handler message request
@@ -20,6 +20,7 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 	verifyMsgSign := c.Query("msg_signature")
 	verifyTimestamp := c.Query("timestamp")
 	verifyNonce := c.Query("nonce")
+	secret := b.WechatBotSecret
 
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -29,7 +30,7 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 		return
 	}
 	log.Printf("messageHandler: %s\n", string(body))
-	wxcpt := wxbizmsgcrypt.NewWXBizMsgCrypt(config.Token, config.EncodingAESKey, "", wxbizmsgcrypt.XmlType)
+	wxcpt := wxbizmsgcrypt.NewWXBizMsgCrypt(secret.Token, secret.EncodingAESKey, "", wxbizmsgcrypt.XmlType)
 
 	var msg []byte
 	var cryptErr *wxbizmsgcrypt.CryptError

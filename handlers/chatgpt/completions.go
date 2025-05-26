@@ -81,7 +81,6 @@ func (o *OpenAIHandler) recordRequest(request *http.Request) error {
 		fmt.Println("completions: read request body failed")
 		return err
 	}
-	// fmt.Println("requestBody: " + string(requestBody))
 	request.Body = io.NopCloser(bytes.NewReader(requestBody))
 
 	var chatReq = &openai.ChatRequest{}

@@ -2,23 +2,26 @@ package handlers
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kekaifun/work-weixin-bot/config"
 	"github.com/sbzhu/weworkapi_golang/wxbizmsgcrypt"
-	"log"
 )
 
 type Bot struct {
-	Name string
+	Name            string
+	WechatBotSecret config.WechatBotSecret
 }
 
 func (b *Bot) VerifySignature(c *gin.Context) ([]byte, error) {
+	secret := b.WechatBotSecret
 	verifyTimestamp := c.Query("timestamp")
 	verifyNonce := c.Query("nonce")
 	verifyEchoStr := c.Query("echostr")
 	verifyMsgSign := c.Query("msg_signature")
 
-	wxcpt := wxbizmsgcrypt.NewWXBizMsgCrypt(config.Token, config.EncodingAESKey, "", wxbizmsgcrypt.XmlType)
+	wxcpt := wxbizmsgcrypt.NewWXBizMsgCrypt(secret.Token, secret.EncodingAESKey, "", wxbizmsgcrypt.XmlType)
 
 	echoStr, cryptErr := wxcpt.VerifyURL(verifyMsgSign, verifyTimestamp, verifyNonce, verifyEchoStr)
 	var err error
