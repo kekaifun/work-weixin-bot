@@ -17,14 +17,14 @@ type MentionedMobileList struct {
 }
 
 type ResponseText struct {
-	Content             wxbizmsgcrypt.CDATA `json:"Content" xml:"Content"`
-	MentionedList       MentionedList       `json:"MentionedList,omitempty" xml:"MentionedList"`
-	MentionedMobileList MentionedMobileList `json:"MentionedMobileList,omitempty" xml:"MentionedMobileList"`
+	Content             wxbizmsgcrypt.CDATA `json:"content" xml:"Content"`
+	MentionedList       MentionedList       `json:"mentioned_list,omitempty" xml:"MentionedList"`
+	MentionedMobileList MentionedMobileList `json:"mentioned_mobile_list,omitempty" xml:"MentionedMobileList"`
 }
 
 type ReplyMsgContent struct {
 	XMLName       xml.Name     `xml:"xml"`
 	MsgType       string       `xml:"MsgType"`
 	VisibleToUser string       `xml:"VisibleToUser,omitempty"`
-	Text          ResponseText `json:"Text" xml:"Text"`
+	Text          ResponseText `json:"text" xml:"Text"`
 }

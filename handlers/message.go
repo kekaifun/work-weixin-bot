@@ -60,8 +60,8 @@ func (b *Bot) MessageHandler(c *gin.Context) {
 		msgContent.Text.Content = strings.TrimPrefix(msgContent.Text.Content, "@"+b.Name+" ")
 	}
 	if enableAsyncResponse {
-		c.Status(http.StatusOK)
 		go b.asyncResponse(msgContent)
+		c.Status(http.StatusOK)
 		return
 	}
 
@@ -108,14 +108,36 @@ func (b *Bot) asyncResponse(msgContent work_weixin.MsgContent) {
 		log.Printf("read async response body failed: %v", err)
 		return
 	}
+	log.Printf("async response body: %s", string(body))
+	// body: {"status":"ok","response":"你好！有什么可以帮您的吗？😊"}, 需要解析出response
+	response := struct {
+		Status   string `json:"status"`
+		Response string `json:"response"`
+	}{}
+	json.Unmarshal(body, &response)
+	log.Printf("response: %s", response.Response)
 
-	reply := work_weixin.ReplyMsgContent{
-		Text: work_weixin.ResponseText{
-			Content: wxbizmsgcrypt.CDATA{Value: string(body)},
-		},
+	reply := work_weixin.PostMessage{
+		ChatId:  msgContent.ChatId,
 		MsgType: msgContent.MsgType,
+		Text: work_weixin.TextJson{
+			Content:       response.Response,
+			MentionedList: []string{msgContent.From.UserId},
+		},
 	}
-	replyXml, _ := xml.Marshal(&reply)
+	replyJson, _ := json.Marshal(reply)
+	log.Printf("replyJson: %s", string(replyJson))
 
-	http.Post(msgContent.WebhookUrl, "application/xml", bytes.NewBuffer(replyXml))
+	resp, err = http.Post(msgContent.WebhookUrl, "application/json", bytes.NewBuffer(replyJson))
+	if err != nil {
+		log.Printf("send async request failed: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("read async response body failed: %v", err)
+		return
+	}
+	log.Printf("async response body: %s", string(body))
 }
