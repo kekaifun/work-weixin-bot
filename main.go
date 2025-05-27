@@ -30,7 +30,8 @@ func main() {
 
 	engine := gin.Default()
 	bot := &handlers.Bot{
-		Name: "汪汪队长",
+		Name:            "汪汪队长",
+		WechatBotConfig: cfg.WechatBot,
 	}
 
 	openAIHandler := &chatgpt.OpenAIHandler{
