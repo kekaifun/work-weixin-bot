@@ -1,1 +1,206 @@
 # 企业微信聊天机器人
+
+一个基于 Go 语言开发的企业微信聊天机器人，支持消息接收和处理，以及 OpenAI API 代理功能。
+
+## ✨ 功能特性
+
+- 🤖 **企业微信机器人集成**: 完整支持企业微信机器人消息接收和响应
+- 🔐 **消息加密解密**: 支持企业微信消息加密/解密处理
+- 🚀 **异步消息处理**: 支持异步响应模式，提升处理效率
+- 🔗 **OpenAI API 代理**: 可选的 OpenAI API 代理功能
+- ⚙️ **灵活配置**: 支持 YAML 配置文件，灵活配置各项参数
+- 🐳 **容器化部署**: 提供 Docker 支持，便于部署和扩展
+- 📊 **日志记录**: 完整的日志记录和错误处理
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Go 1.23+
+- 企业微信机器人 Token 和 AES 密钥
+
+### 安装和运行
+
+1. **克隆项目**
+   ```bash
+   git clone https://github.com/kekaifun/work-weixin-bot.git
+   cd work-weixin-bot
+   ```
+
+2. **安装依赖**
+   ```bash
+   go mod download
+   ```
+
+3. **配置机器人**
+   
+   创建配置文件 `config/config.yaml`：
+   ```yaml
+   # 服务监听地址
+   addr: 0.0.0.0:8099
+
+   # 企业微信机器人配置
+   wechat_bot:
+     secret:
+       token: your-token-here
+       encoding_aes_key: your-aes-key-here
+     serve_path: /wechat-bot
+     backend_server:
+       url: http://localhost:8099/wechat-bot
+     async_response: true
+
+   # OpenAI代理配置（可选）
+   openai:
+     base_url: https://api.openai.com
+     serve_path: /openai
+   ```
+
+4. **构建和运行**
+   ```bash
+   # 构建项目
+   make build
+   
+   # 运行（使用默认配置）
+   ./bin/weixin-bot
+   
+   # 运行（指定配置文件）
+   ./bin/weixin-bot --config /path/to/config.yaml
+   ```
+
+## 📡 API 接口
+
+### 企业微信机器人接口
+
+- **GET** `/wechat-bot` - 验证企业微信机器人
+- **POST** `/wechat-bot` - 接收企业微信消息
+- **GET** `/hello` - 健康检查接口
+
+### OpenAI 代理接口（可选）
+
+- **POST** `/openai` - OpenAI API 代理
+- **OPTIONS** `/openai` - CORS 预检请求
+
+## ⚙️ 配置说明
+
+### 配置文件参数
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| `addr` | string | ✅ | 服务器监听地址和端口 |
+| `wechat_bot.secret.token` | string | ✅ | 企业微信机器人 Token |
+| `wechat_bot.secret.encoding_aes_key` | string | ✅ | 企业微信机器人 AES 密钥 |
+| `wechat_bot.serve_path` | string | ✅ | 企业微信机器人服务路径 |
+| `wechat_bot.backend_server.url` | string | ✅ | 后端服务器地址 |
+| `wechat_bot.async_response` | boolean | ✅ | 是否启用异步响应 |
+| `openai.base_url` | string | ❌ | OpenAI API 基础 URL |
+| `openai.serve_path` | string | ❌ | OpenAI 代理服务路径 |
+
+### 命令行参数
+
+```bash
+./bin/weixin-bot --help
+```
+
+- `--config`: 指定配置文件路径（默认: `config/config.yaml`）
+
+## 🐳 Docker 部署
+
+### 构建镜像
+
+```bash
+# 构建 Docker 镜像
+make build-image
+
+# 构建 Linux 镜像（多平台）
+make build-linux-image
+```
+
+### 运行容器
+
+```bash
+docker run -d \
+  --name work-weixin-bot \
+  -p 8099:80 \
+  -v /path/to/config:/app/config \
+  ccr.ccs.tencentyun.com/cloudmonitor/wework-weixin-bot:latest
+```
+
+### Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  weixin-bot:
+    image: ccr.ccs.tencentyun.com/cloudmonitor/wework-weixin-bot:latest
+    ports:
+      - "8099:80"
+    volumes:
+      - ./config:/app/config
+    environment:
+      - GO_ENV=production
+    restart: unless-stopped
+```
+
+## 🏗️ 项目结构
+
+```
+├── main.go                 # 主程序入口
+├── handlers/               # 请求处理器
+│   ├── bot.go             # 机器人核心逻辑
+│   ├── message.go         # 消息处理
+│   ├── verify.go          # 签名验证
+│   └── chatgpt/           # ChatGPT 相关处理
+├── config/                 # 配置文件目录
+├── pkg/                   # 公共包
+│   └── wxbizmsgcrypt/     # 微信消息加密库
+├── model/                 # 数据模型
+├── bin/                   # 编译输出目录
+├── Dockerfile             # Docker 配置
+├── makefile              # 构建脚本
+└── README_CONFIG.md      # 详细配置说明
+```
+
+## 🔧 开发
+
+### 测试
+
+```bash
+# 运行测试
+go test ./...
+
+# 运行特定包的测试
+go test ./handlers
+```
+
+### 构建
+
+```bash
+# 本地构建
+make build
+
+# 跨平台构建
+GOOS=linux GOARCH=amd64 make build
+```
+
+## 📝 日志
+
+程序运行时会输出详细的日志信息，包括：
+
+- 配置文件加载状态
+- 服务启动信息
+- 消息处理日志
+- 错误信息和调试信息
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+## 🔗 相关链接
+
+- [企业微信机器人开发文档](https://developer.work.weixin.qq.com/document/path/91770)
+- [Go Gin 框架](https://gin-gonic.com/)
+- [企业微信 Go SDK](https://github.com/sbzhu/weworkapi_golang)
